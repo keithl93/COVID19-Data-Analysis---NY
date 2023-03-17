@@ -1,5 +1,5 @@
 # COVID19-Data-Analysis---NY
-Introduction
+
 Coronavirus (COVID-19) pandemic is the most significant health disaster that has affected the world since
 its outbreak in early 2020. Since it is a contagious disease by the virus, the spread is entirely dependent on
 the human interactions. Reducing the chances of infection by wearing a mask, avoiding close distance from
