@@ -1,0 +1,276 @@
+---
+title: "Coronavirus (COVID-19) Data Analysis in the United States"
+author: 'Keith Lee'
+output: pdf_document
+latex_engine: tinytex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+# Introduction 
+
+Coronavirus (COVID-19) pandemic is the most significant health disaster that has affected the world since its outbreak in early 2020. Since it is a contagious disease by the virus, the spread is  entirely dependent on the human interactions. Reducing the chances of infection by wearing a mask, avoiding close distance from others, practicing good hygiene, and others have been a practice of life.
+
+In this project, the data of COVID-19 pandemic in USA from January 2020 till present has been analyzed to examine the statistical distributions. The historical data of the coronavirus cases and deaths for each geography was included in the data. By analyzing it, the specific times and locations for the most incidences were examined. This analysis can also show which locations in the US are more prone to contagious disasters.
+
+# Packages Required
+
+Packages with useful collection of functions were loaded in order to reproduce the code and results. They were standard packages used for tidying and analyzing the data. Packages for formatting the data visualization were also loaded. 
+
+```{r load_packages, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(scales)
+```
+
+# Data Preparation
+
+## Loading Data
+The data included incidences in the US from the start till present, including separate files for each year, entire country, and states. 
+
+```{r echo=FALSE}
+# Define raw datasets and check it's size and columns
+print("Daily Incidences in US")
+us <- read.csv("us.csv")
+dim(us)
+
+print("Daily Incidences in each State in US")
+usstates <- read.csv("us-states.csv")
+dim(usstates)
+
+print("Daily Incidences in each County in US during 2020")
+us2020 <- read.csv("us-counties-2020.csv")
+dim(us2020)
+
+print("Daily Incidences in each County in US during 2021")
+us2021 <- read.csv("us-counties-2021.csv")
+dim(us2021)
+
+print("Daily Incidences in each County in US during 2022")
+us2022 <- read.csv("us-counties-2022.csv")
+dim(us2022)
+
+print("Daily Incidences in each County in US during 2023")
+us2023 <- read.csv("us-counties-2023.csv")
+dim(us2023)
+```
+
+## Tidying Data
+Separate objects of datasets selected by groups of dates were created, including months which was extracted from the date, and by states. The datasets for the cases and deaths were accumulated for different groups: 
+  - incidences by year
+  - incidences by month and year
+  - incidences in each county
+  - incidences in each state by month
+  - incidences in each state by year
+
+
+```{r}
+# cleaning and reformating date for all tables
+us$date <- as.Date(us$date)
+us$yr <- format(as.Date(us$date), "%Y")
+us$mnt <- format(as.Date(us$date), "%m")
+us$dt <- format(as.Date(us$date), "%d")
+us$year_month <- format(as.Date(us$date), "%Y-%m")
+
+usstates$date <- as.Date(usstates$date)
+usstates$yr <- format(as.Date(usstates$date), "%Y")
+usstates$mnt <- format(as.Date(usstates$date), "%m")
+usstates$dt <- format(as.Date(usstates$date), "%d")
+usstates$year_month <- format(as.Date(usstates$date), "%Y-%m")
+
+us2020$date <- as.Date(us2020$date)
+us2020$yr <- format(as.Date(us2020$date), "%Y")
+us2020$mnt <- format(as.Date(us2020$date), "%m")
+us2020$dt <- format(as.Date(us2020$date), "%d")
+us2020$year_month <- format(as.Date(us2020$date), "%Y-%m")
+
+us2021$date <- as.Date(us2021$date)
+us2021$yr <- format(as.Date(us2021$date), "%Y")
+us2021$mnt <- format(as.Date(us2021$date), "%m")
+us2021$dt <- format(as.Date(us2021$date), "%d")
+us2021$year_month <- format(as.Date(us2021$date), "%Y-%m")
+
+us2022$date <- as.Date(us2022$date)
+us2022$yr <- format(as.Date(us2022$date), "%Y")
+us2022$mnt <- format(as.Date(us2022$date), "%m")
+us2022$dt <- format(as.Date(us2022$date), "%d")
+us2022$year_month <- format(as.Date(us2022$date), "%Y-%m")
+
+us2023$date <- as.Date(us2023$date)
+us2023$yr <- format(as.Date(us2023$date), "%Y")
+us2023$mnt <- format(as.Date(us2023$date), "%m")
+us2023$dt <- format(as.Date(us2023$date), "%d")
+us2023$year_month <- format(as.Date(us2023$date), "%Y-%m")
+
+# Data by month and year
+us_monthly <- us %>%
+  group_by(year_month) %>%
+  dplyr::summarise(cases = sum(cases),
+            deaths = sum(deaths))
+print("Data by month and year")
+dim(us_monthly)
+
+# Data by year
+us_yearly <- us %>%
+  group_by(yr) %>%
+  dplyr::summarise(cases = sum(cases),
+            deaths = sum(deaths))
+print("Data by year")
+dim(us_yearly)
+
+# combine all years and extract date elements
+us_incidences <- us2020 %>%
+  rbind(us2021) %>%
+  rbind(us2022) %>%
+  rbind(us2023)
+print("Total incidences")
+dim(us_incidences)
+
+# Data by month, year, state
+us_monthly_state <- us_incidences %>%
+  group_by(year_month, state) %>%
+  dplyr::summarise(cases = sum(cases),
+            deaths = sum(deaths))
+print("Monthly by each state")
+dim(us_monthly_state)
+
+# Data by year, state
+us_yearly_state <- us_incidences %>%
+  group_by(yr, state) %>%
+  dplyr::summarise(cases = sum(cases),
+            deaths = sum(deaths))
+print("Yearly by each state")
+dim(us_yearly_state)
+
+# Cases by the month of each year
+us2020_sum <- us2020 %>% group_by(mnt) %>% dplyr::summarise(cases = sum(cases))
+us2021_sum <- us2021 %>% group_by(mnt) %>% summarise(cases = sum(cases))
+us2022_sum <- us2022 %>% group_by(mnt) %>% dplyr::summarise(cases = sum(cases))
+us2023_sum <- us2023 %>% group_by(mnt) %>% dplyr::summarise(cases = sum(cases))
+us_incidences_tb <- us2020_sum %>%
+  full_join(us2021_sum, by=c("mnt"), suffix=c("_2020","_2021")) %>%
+  full_join(us2022_sum, by=c("mnt"), suffix=c("_2020","_2022")) %>%
+  full_join(us2023_sum, by=c("mnt"), suffix=c("_2020","_2023")) 
+print("Total incidences Year Comparison")
+dim(us_incidences_tb)
+us_incidences_tb
+
+# us_monthly_state
+# us_yearly_state
+
+```
+
+Then, the accumulated datasets were filtered to the state of New York to analyze its distributions.
+
+``` {r}
+us_monthly_state_NY <- us_monthly_state %>%
+  filter(state == "New York")
+# dim(us_monthly_state_NY)
+
+us_yearly_state_NY <- us_yearly_state %>%
+  filter(state == "New York")
+# dim(us_yearly_state_NY)
+
+us_NY <- us_incidences %>%
+  filter(state == "New York")
+print("Filtered to NY")
+dim(us_NY)
+
+us_NY_counties <- us_NY %>%
+  group_by(county) %>%
+  dplyr::summarise(cases = sum(cases),
+            deaths = sum(deaths))
+print("Incidences by County")
+dim(us_NY_counties)
+us_NY_counties
+
+```
+
+
+# Exploratory Data Analysis
+
+The pre-processed data was analyzed to calculate the statistical distribution of the cases and deaths by the groups. Firstly, the cases and deaths in the US from the beginning were visualized.
+ 
+```{r}
+ggplot(us, aes(x=date, y=cases)) +          
+  geom_line() + 
+  scale_y_continuous(labels = comma)
+ggplot(us, aes(x=date, y=deaths)) +          
+  geom_line() + 
+  scale_y_continuous(labels = comma)
+
+```
+The descriptive statistics was calculated for the tables.
+
+``` {r}
+print("Total daily cases in US")
+summary(us)
+
+print("Total daily cases in 2020")
+summary(us2020)
+
+print("Total daily cases in 2021")
+summary(us2021)
+
+print("Total daily cases in 2022")
+summary(us2022)
+
+print("Total daily cases in 2023")
+summary(us2023)
+
+print("Total daily cases difference by the year")
+summary(us_incidences_tb)
+
+print("Distribution of county cases")
+summary(us_NY_counties)
+
+```
+
+The states in the US were ranked according to the sum of cases and deaths. Likewise, the New York counties were then ranked according to the sums of cases and deaths.
+
+``` {r}
+# top 5 counties according to number of cases
+us_states_top5 <-  us_yearly_state %>%
+  group_by(state) %>%
+  dplyr::summarise(cases = sum(cases)) %>%
+  arrange(desc(cases)) %>%
+  slice(1:5)
+ggplot(us_states_top5, aes(x=state, y=cases)) +  geom_bar(stat="identity", fill="blue") + geom_text(aes(label=cases), vjust=1.6, color="white", size=3.5)
+
+# last 5 counties according to number of cases
+us_states_last5 <-  us_yearly_state %>%
+  group_by(state) %>%
+  dplyr::summarise(cases = sum(cases)) %>%
+  arrange(cases) %>%
+  slice(1:5)
+ggplot(us_states_last5, aes(x=state, y=cases)) +  geom_bar(stat="identity", fill="red") + geom_text(aes(label=cases), vjust=1.6, color="black", size=3.5)
+```
+
+``` {r}
+# top 5 counties according to number of cases
+us_NY_counties_top5 <-  us_NY_counties %>%
+  arrange(desc(cases)) %>%
+  slice(1:5)
+# us_NY_counties_top5
+ggplot(us_NY_counties_top5, aes(x=county, y=cases)) +  geom_bar(stat="identity", fill="blue") + geom_text(aes(label=cases), vjust=1.6, color="white", size=3.5)
+
+# last 5 counties according to number of cases
+us_NY_counties_last5 <-  us_NY_counties %>%
+  arrange(cases) %>%
+  slice(1:5)
+# us_NY_counties_last5
+ggplot(us_NY_counties_last5, aes(x=county, y=cases)) +  geom_bar(stat="identity", fill="red") + geom_text(aes(label=cases), vjust=1.6, color="black", size=3.5)
+```
+
+# Summary
+
+After analyzing the COVID-19 pandemic data for the US, more details about the cases and deaths was understood. Firstly, the trend was examined over time and to see what are the frequent times of the year for most incidences. The line graph clearly showed that the highest jumps were during the new year time. The holiday season during the end of the year appeared to have the highest number of cases within the timeline. Looking back at the table comparing the number of cases within each month between the years, the largest difference occurred during New Year's time of 2021. The New Year's of 2020 was the second largest and it was only half. The trends become more linear after the holiday season. This last holiday season appeared better than previous. The descriptive statistics was also calculated and it showed that the cases and deaths increased exponentially over the years. The states in the US with the highest sum of cases were the following ranked from the top: California, Texas, Florida, New York, and Illinois. Starting from the least sums, they were American Samoa, Northern Marinara Islands, Virgun Islands, Guam, and Vermont. The data was then filtered to New York state and the 5 counties with the most cases and least cases were examined. Counties with the most cases were New York City, Suffolk, Nassau, Westchester, and Erie, ranked descending. The least cases occurred in Hamilton, Schuyler, Yates, and Schoharie, ranked ascending.
+
+
+
+# Thank You!
+
+
